@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+  <meta charset="utf-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, minimal-ui">
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="format-detection" content="telephone=no,email=no,adress=no">
+  <!-- Color theme for statusbar -->
+  <meta name="theme-color" content="#000000" />
+  <!-- 强制页面在当前窗口以独立页面显示,防止别人在框架里调用页面 -->
+  <meta http-equiv="window-target" content="_top" />
+  
+  
+  <title>express—了解中间件 | Gsmx的个人博客</title>
+  <meta name="description" content="Express 是一个自身功能极简，完全是由路由和中间件构成一个的 web 开发框架：从本质上来说，一个 Express 应用就是在调用各种中间件。  中间件（Middleware） 是一个函数，它可以访问 请求对象（request object (req)）, 响应对象（response object (res)）, 和 web 应用中处于请求-响应循环流程中的中间件，一般被命名为 next 的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="express—了解中间件">
+<meta property="og:url" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;10&#x2F;21&#x2F;express%E5%B8%B8%E7%94%A8%E4%B8%AD%E9%97%B4%E4%BB%B6%E7%9A%84%E8%AF%A6%E7%BB%86%E4%BB%8B%E7%BB%8D&#x2F;index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Express 是一个自身功能极简，完全是由路由和中间件构成一个的 web 开发框架：从本质上来说，一个 Express 应用就是在调用各种中间件。  中间件（Middleware） 是一个函数，它可以访问 请求对象（request object (req)）, 响应对象（response object (res)）, 和 web 应用中处于请求-响应循环流程中的中间件，一般被命名为 next 的">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2019-10-23T09:35:08.549Z">
+<meta name="twitter:card" content="summary">
+  <!-- Canonical links -->
+  <link rel="canonical" href="http://yoursite.com/2019/10/21/express%E5%B8%B8%E7%94%A8%E4%B8%AD%E9%97%B4%E4%BB%B6%E7%9A%84%E8%AF%A6%E7%BB%86%E4%BB%8B%E7%BB%8D/index.html">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png" type="image/x-icon">
+  
+  <link rel="stylesheet" href="/css/style.css">
+  
+  
+  
+  
+</head>
+
+
+<body class="main-center" itemscope itemtype="http://schema.org/WebPage">
+  <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+  <div class="slimContent">
+    <div class="navbar-header">
+      
+      
+      <div class="profile-block text-center">
+        <a id="avatar" href="https://github.com/Gsmxs" target="_blank">
+          <img class="img-circle img-rotate" src="/images/tx.jpg" width="200" height="200">
+        </a>
+        <h2 id="name" class="hidden-xs hidden-sm">申渺鑫</h2>
+        <h3 id="title" class="hidden-xs hidden-sm hidden-md">Web Developer</h3>
+        <small id="location" class="text-muted hidden-xs hidden-sm"><i class="icon icon-map-marker"></i> Zhengzhou, China</small>
+      </div>
+      
+      <div class="search" id="search-form-wrap">
+
+    <form class="search-form sidebar-form">
+        <div class="input-group">
+            <input type="text" class="search-form-input form-control" placeholder="Search" />
+            <span class="input-group-btn">
+                <button type="submit" class="search-form-submit btn btn-flat" onclick="return false;"><i class="icon icon-search"></i></button>
+            </span>
+        </div>
+    </form>
+    <div class="ins-search">
+  <div class="ins-search-mask"></div>
+  <div class="ins-search-container">
+    <div class="ins-input-wrapper">
+      <input type="text" class="ins-search-input" placeholder="Type something..." x-webkit-speech />
+      <button type="button" class="close ins-close ins-selectable" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+    </div>
+    <div class="ins-section-wrapper">
+      <div class="ins-section-container"></div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+      <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <nav id="main-navbar" class="collapse navbar-collapse" itemscope itemtype="http://schema.org/SiteNavigationElement" role="navigation">
+      <ul class="nav navbar-nav main-nav ">
+        
+        
+        <li class="menu-item menu-item-home">
+          <a href="/.">
+            
+            <i class="icon icon-home-fill"></i>
+            
+            <span class="menu-title">Home</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives">
+            
+            <i class="icon icon-archives-fill"></i>
+            
+            <span class="menu-title">Archives</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories">
+            
+            <i class="icon icon-folder"></i>
+            
+            <span class="menu-title">Categories</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags">
+            
+            <i class="icon icon-tags"></i>
+            
+            <span class="menu-title">Tags</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-repository">
+          <a href="/repository">
+            
+            <i class="icon icon-project"></i>
+            
+            <span class="menu-title">Repository</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-books">
+          <a href="/books">
+            
+            <i class="icon icon-book-fill"></i>
+            
+            <span class="menu-title">Books</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-links">
+          <a href="/links">
+            
+            <i class="icon icon-friendship"></i>
+            
+            <span class="menu-title">Links</span>
+          </a>
+        </li>
+        
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about">
+            
+            <i class="icon icon-cup-fill"></i>
+            
+            <span class="menu-title">About</span>
+          </a>
+        </li>
+        
+      </ul>
+      
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/Gsmxs" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="https://weibo.com/p/1005056044839274/home?from=page_100505&mod=TAB&is_all=1#place" target="_blank" title="Weibo" data-toggle=tooltip data-placement=top><i class="icon icon-weibo"></i></a></li>
+        
+        <li><a href="https://twitter.com/iwebued" target="_blank" title="Twitter" data-toggle=tooltip data-placement=top><i class="icon icon-twitter"></i></a></li>
+        
+        <li><a href="https://www.behance.net/cofess" target="_blank" title="Behance" data-toggle=tooltip data-placement=top><i class="icon icon-behance"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    </nav>
+  </div>
+</header>
+
+  
+    <aside class="sidebar" itemscope itemtype="http://schema.org/WPSideBar">
+  <div class="slimContent">
+    
+      <div class="widget">
+    <h3 class="widget-title">Board</h3>
+    <div class="widget-body">
+        <div id="board">
+            <div class="content">
+                <p>欢迎交流与分享经验!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+    
+      
+
+    
+      
+
+    
+      
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Archive</h3>
+    <div class="widget-body">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/10/">October 2019</a><span class="archive-list-count">4</span></li></ul>
+    </div>
+  </div>
+
+
+    
+      
+  <div class="widget">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget-body">
+      <ul class="recent-post-list list-unstyled no-thumbnail">
+        
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2019/10/21/express%E5%B8%B8%E7%94%A8%E4%B8%AD%E9%97%B4%E4%BB%B6%E7%9A%84%E8%AF%A6%E7%BB%86%E4%BB%8B%E7%BB%8D/" class="title">express—了解中间件</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-10-21T02:35:12.000Z" itemprop="datePublished">2019-10-21</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2019/10/20/%E5%AF%B9package.json%E7%9A%84%E7%90%86%E8%A7%A3%E5%92%8C%E5%AD%A6%E4%B9%A0/" class="title">对package.json的理解和学习</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-10-20T02:43:31.791Z" itemprop="datePublished">2019-10-20</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2019/10/19/http%E7%8A%B6%E6%80%81%E7%A0%81%E6%B1%87%E6%80%BB/" class="title">Http状态码汇总</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-10-19T12:17:08.000Z" itemprop="datePublished">2019-10-19</time>
+              </p>
+            </div>
+          </li>
+          
+          <li>
+            
+            <div class="item-inner">
+              <p class="item-category">
+                
+              </p>
+              <p class="item-title">
+                <a href="/2019/10/18/Markdown%E7%9A%84%E4%B8%80%E4%BA%9B%E5%9F%BA%E6%9C%AC%E8%AF%AD%E6%B3%95/" class="title">Markdown的基本语法</a>
+              </p>
+              <p class="item-date">
+                <time datetime="2019-10-18T12:38:56.000Z" itemprop="datePublished">2019-10-18</time>
+              </p>
+            </div>
+          </li>
+          
+      </ul>
+    </div>
+  </div>
+  
+
+    
+  </div>
+</aside>
+
+  
+  
+<main class="main" role="main">
+  <div class="content">
+  <article id="post-express常用中间件的详细介绍" class="article article-type-post" itemscope itemtype="http://schema.org/BlogPosting">
+    
+    <div class="article-header">
+      
+        
+  
+    <h1 class="article-title" itemprop="name">
+      express—了解中间件
+    </h1>
+  
+
+      
+      <div class="article-meta">
+        <span class="article-date">
+    <i class="icon icon-calendar-check"></i>
+	<a href="/2019/10/21/express%E5%B8%B8%E7%94%A8%E4%B8%AD%E9%97%B4%E4%BB%B6%E7%9A%84%E8%AF%A6%E7%BB%86%E4%BB%8B%E7%BB%8D/" class="article-date">
+	  <time datetime="2019-10-21T02:35:12.000Z" itemprop="datePublished">2019-10-21</time>
+	</a>
+</span>
+        
+        
+
+        
+
+        <span class="post-comment"><i class="icon icon-comment"></i> <a href="/2019/10/21/express%E5%B8%B8%E7%94%A8%E4%B8%AD%E9%97%B4%E4%BB%B6%E7%9A%84%E8%AF%A6%E7%BB%86%E4%BB%8B%E7%BB%8D/#comments" class="article-comment-link">Comments</a></span>
+        
+      </div>
+    </div>
+    <div class="article-entry marked-body" itemprop="articleBody">
+      
+        <p><strong>Express 是一个自身功能极简，完全是由路由和中间件构成一个的 web 开发框架：从本质上来说，一个 Express 应用就是在调用各种中间件。</strong></p>
+<blockquote>
+<p>中间件（Middleware） 是一个函数，它可以访问 请求对象（request object (req)）, 响应对象（response object (res)）, 和 web 应用中处于请求-响应循环流程中的中间件，一般被命名为 next 的变量。</p>
+</blockquote>
+<h3 id="中间件的功能包括："><a href="#中间件的功能包括：" class="headerlink" title="中间件的功能包括："></a>中间件的功能包括：</h3><blockquote>
+<p>执行任何代码。<br>修改请求和响应对象。<br>终结请求-响应循环。<br>调用堆栈中的下一个中间件。<br>如果当前中间件没有终结请求-响应循环，则必须调用 next() 方法将控制权交给下一个中间件，否则请求就会挂起。</p>
+</blockquote>
+<h3 id="Express-应用可使用如下几种中间件："><a href="#Express-应用可使用如下几种中间件：" class="headerlink" title="Express 应用可使用如下几种中间件："></a>Express 应用可使用如下几种中间件：</h3><blockquote>
+<p>应用级中间件<br>路由级中间件<br>错误处理中间件<br>内置中间件<br>第三方中间件<br><strong>使用可选则挂载路径，可在应用级别或路由级别装载中间件。另外，你还可以同时装在一系列中间件函数，从而在一个挂载点上创建一个子中间件栈。</strong></p>
+</blockquote>
+<h4 id="应用级中间件："><a href="#应用级中间件：" class="headerlink" title="应用级中间件："></a>应用级中间件：</h4><p>应用级中间件绑定到app对象使用app.use()和app.METHOD()，其中，METHOD是需要处理的HTTP请求的方法，例如GET，PUT，POST等等，全部小写。例如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">var app = express();</span><br><span class="line"></span><br><span class="line">// 没有挂载路径的中间件，应用的每个请求都会执行该中间件</span><br><span class="line">app.use(function (req, res, next) &#123;</span><br><span class="line">  console.log(&apos;Time:&apos;, Date.now());</span><br><span class="line">  next();</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">// 挂载至 /user/:id 的中间件，任何指向 /user/:id 的请求都会执行它</span><br><span class="line">app.use(&apos;/user/:id&apos;, function (req, res, next) &#123;</span><br><span class="line">  console.log(&apos;Request Type:&apos;, req.method);</span><br><span class="line">  next();</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">// 路由和句柄函数(中间件系统)，处理指向 /user/:id 的 GET 请求</span><br><span class="line">app.get(&apos;/user/:id&apos;, function (req, res, next) &#123;</span><br><span class="line">  res.send(&apos;USER&apos;);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p><strong>下面这个例子展示了在一个挂载点装载一组中间件。</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">// 一个中间件栈，对任何指向 /user/:id 的 HTTP 请求打印出相关信息</span><br><span class="line">app.use(&apos;/user/:id&apos;, function(req, res, next) &#123;</span><br><span class="line">  console.log(&apos;Request URL:&apos;, req.originalUrl);</span><br><span class="line">  next();</span><br><span class="line">&#125;, function (req, res, next) &#123;</span><br><span class="line">  console.log(&apos;Request Type:&apos;, req.method);</span><br><span class="line">  next();</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>作为中间件系统的路由句柄，使得为路径定义多个路由成为可能。在下面的例子中，为指向 /user/:id 的 GET 请求定义了两个路由。第二个路由虽然不会带来任何问题，但却永远不会被调用，因为第一个路由已经终止了请求-响应循环。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">// 一个中间件栈，处理指向 /user/:id 的 GET 请求</span><br><span class="line">app.get(&apos;/user/:id&apos;, function (req, res, next) &#123;</span><br><span class="line">  console.log(&apos;ID:&apos;, req.params.id);</span><br><span class="line">  next();</span><br><span class="line">&#125;, function (req, res, next) &#123;</span><br><span class="line">  res.send(&apos;User Info&apos;);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">// 处理 /user/:id， 打印出用户 id</span><br><span class="line">app.get(&apos;/user/:id&apos;, function (req, res, next) &#123;</span><br><span class="line">  res.end(req.params.id);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>如果需要在中间件栈中跳过剩余中间件，调用 <strong>next(‘route’)</strong> 方法将控制权交给下一个路由。<br><strong>注意： next(‘route’) 只对使用 app.VERB() 或 router.VERB() 加载的中间件有效</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">// 一个中间件栈，处理指向 /user/:id 的 GET 请求</span><br><span class="line">app.get(&apos;/user/:id&apos;, function (req, res, next) &#123;</span><br><span class="line">  // 如果 user id 为 0, 跳到下一个路由</span><br><span class="line">  if (req.params.id == 0) next(&apos;route&apos;);</span><br><span class="line">  // 否则将控制权交给栈中下一个中间件</span><br><span class="line">  else next(); //</span><br><span class="line">&#125;, function (req, res, next) &#123;</span><br><span class="line">  // 渲染常规页面</span><br><span class="line">  res.render(&apos;regular&apos;);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">// 处理 /user/:id， 渲染一个特殊页面</span><br><span class="line">app.get(&apos;/user/:id&apos;, function (req, res, next) &#123;</span><br><span class="line">  res.render(&apos;special&apos;);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<h4 id="路由级中间件："><a href="#路由级中间件：" class="headerlink" title="路由级中间件："></a>路由级中间件：</h4><p>路由级中间件和应用级中间件一样，只是它绑定的对象为express.Router()。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">var router = express.Router();</span><br><span class="line"></span><br><span class="line">//路由级使用router.use()或router.VERB()加载。</span><br><span class="line"></span><br><span class="line"># 1. 声明路由级中间件</span><br><span class="line">var express = require(&apos;express&apos;);</span><br><span class="line"></span><br><span class="line">// 路由中间件</span><br><span class="line">var router = express.Router();</span><br><span class="line">router.get(&apos;/&apos;,function (req,res,next) &#123;</span><br><span class="line">    res.send(&apos;root&apos;);</span><br><span class="line">&#125;)</span><br><span class="line">// 路由中间件 导出</span><br><span class="line">module.exports = router;</span><br><span class="line"></span><br><span class="line"># 2. 调用路由级中间件</span><br><span class="line">var express = require(&apos;express&apos;);</span><br><span class="line">var app = express();</span><br><span class="line"></span><br><span class="line">// 引入 路由中间件</span><br><span class="line">var indexRouter = require(&apos;./test3&apos;)</span><br><span class="line"></span><br><span class="line">// 路由中间件的使用</span><br><span class="line">app.use(&apos;/&apos;,indexRouter);</span><br><span class="line"></span><br><span class="line">app.listen(3000);</span><br><span class="line">console.log(&apos;Listen to port 3000&apos;);</span><br></pre></td></tr></table></figure>
+
+
+<h4 id="错误处理中间件："><a href="#错误处理中间件：" class="headerlink" title="错误处理中间件："></a>错误处理中间件：</h4><p>错误处理中间件有4个参数，定义错误处理中间件必须使用这4个参数。即使不需要next对象，也必须在签名中声明它，否则中间件会被识别为一个常规中间件，不能处理错误。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">app.use(function(err,req,res,next)&#123;</span><br><span class="line">	console.error(err,stack);</span><br><span class="line">	res.status(500).send(&apos;Somthing broke!&apos;);</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<h4 id="内置中间件："><a href="#内置中间件：" class="headerlink" title="内置中间件："></a>内置中间件：</h4><p>除了express.static，Express以前内置的中间件现在已经全部单独作为模块安装使用了。</p>
+<h4 id="第三方中间件："><a href="#第三方中间件：" class="headerlink" title="第三方中间件："></a>第三方中间件：</h4><p>通过使用第三方中间件从而为 Express 应用增加更多功能。</p>
+<p>安装所需功能的 node 模块，并在应用中加载，可以在应用级加载，也可以在路由级加载。</p>
+<p>下面的例子安装并加载了一个解析 cookie 的中间件： cookie-parser</p>
+<blockquote>
+<p>$ npm install cookie-parser</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">var express = require(&apos;express&apos;);</span><br><span class="line">var app = express();</span><br><span class="line">var cookieParser = require(&apos;cookie-parser&apos;);</span><br><span class="line"></span><br><span class="line">// 加载用于解析 cookie 的中间件</span><br><span class="line">app.use(cookieParser());</span><br></pre></td></tr></table></figure>
+
+
+
+
+<p>其他一些中间件例子：</p>
+<p><strong>Express中间件：</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">var express = require(&apos;express&apos;);</span><br><span class="line">var app = express();</span><br><span class="line"></span><br><span class="line">// 没有挂载路径的中间件，应用的每个请求都会执行该中间件</span><br><span class="line">app.use(function (req, res, next) &#123;</span><br><span class="line">  console.log(&apos;Time:&apos;, Date.now());</span><br><span class="line">  next();</span><br><span class="line">  console.log(&apos;First&apos;);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">// 挂载至 /user/:id 的中间件，任何指向 /user/:id 的请求都会执行它</span><br><span class="line">app.use(&apos;/user/:id&apos;, function (req, res, next) &#123;</span><br><span class="line">  console.log(&apos;Request Type:&apos;, req.method);</span><br><span class="line">  next();</span><br><span class="line">  console.log(&apos;Second&apos;);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">// 路由和句柄函数(中间件系统)，处理指向 /user/:id 的 GET 请求</span><br><span class="line">app.get(&apos;/user/:id&apos;, function (req, res, next) &#123;</span><br><span class="line">  res.send(&apos;USER&apos;);</span><br><span class="line">  console.log(&apos;路由和中间件，app.get(&#123;&#125;)&apos;);</span><br><span class="line">&#125;);</span><br><span class="line"></span><br><span class="line">app.listen(3000);</span><br><span class="line">console.log(&apos;Listen to port 3000&apos;);</span><br></pre></td></tr></table></figure>
+      
+    </div>
+    <div class="article-footer">
+      <blockquote class="mt-2x">
+  <ul class="post-copyright list-unstyled">
+    
+    <li class="post-copyright-link hidden-xs">
+      <strong>人生建议:</strong>
+      <!-- <a href="http://yoursite.com/2019/10/21/express%E5%B8%B8%E7%94%A8%E4%B8%AD%E9%97%B4%E4%BB%B6%E7%9A%84%E8%AF%A6%E7%BB%86%E4%BB%8B%E7%BB%8D/" title="express—了解中间件" target="_blank" rel="external">http://yoursite.com/2019/10/21/express%E5%B8%B8%E7%94%A8%E4%B8%AD%E9%97%B4%E4%BB%B6%E7%9A%84%E8%AF%A6%E7%BB%86%E4%BB%8B%E7%BB%8D/</a> -->
+    </li>
+    
+    <li class="post-copyright-license">
+      <strong>坚持每天取得一点点进步~Never give up</strong> 
+    </li>
+  </ul>
+</blockquote>
+
+
+<div class="panel panel-default panel-badger">
+  <div class="panel-body">
+    <figure class="media">
+      <div class="media-left">
+        <a href="https://github.com/Gsmxs" target="_blank" class="img-burn thumb-sm visible-lg">
+          <img src="/images/tx.jpg" class="img-rounded w-full" alt="">
+        </a>
+      </div>
+      <div class="media-body">
+        <h3 class="media-heading"><a href="https://github.com/Gsmxs" target="_blank"><span class="text-dark">申渺鑫</span><small class="ml-1x">Web Developer</small></a></h3>
+        <div>一枚河南新乡的学习猿</div>
+      </div>
+    </figure>
+  </div>
+</div>
+
+
+    </div>
+  </article>
+  
+    
+  <section id="comments">
+  	
+      <div id="vcomments"></div>
+    
+  </section>
+
+
+  
+</div>
+
+  <nav class="bar bar-footer clearfix" data-stick-bottom>
+  <div class="bar-inner">
+  
+  <ul class="pager pull-left">
+    
+    
+    <li class="next">
+      <a href="/2019/10/20/%E5%AF%B9package.json%E7%9A%84%E7%90%86%E8%A7%A3%E5%92%8C%E5%AD%A6%E4%B9%A0/" title="对package.json的理解和学习"><span>Older&nbsp;&nbsp;</span><i class="icon icon-angle-right" aria-hidden="true"></i></a>
+    </li>
+    
+    
+  </ul>
+  
+  
+  <!-- Button trigger modal -->
+  <button type="button" class="btn btn-fancy btn-donate pop-onhover bg-gradient-warning" data-toggle="modal" data-target="#donateModal"><span>$</span></button>
+  <!-- <div class="wave-icon wave-icon-danger btn-donate" data-toggle="modal" data-target="#donateModal">
+    <div class="wave-circle"><span class="icon"><i class="icon icon-bill"></i></span></div>
+  </div> -->
+  
+  
+  <div class="bar-right">
+    
+    <div class="share-component" data-sites="weibo,qq,wechat,facebook,twitter" data-mobile-sites="weibo,qq,qzone"></div>
+    
+  </div>
+  </div>
+</nav>
+  
+<!-- Modal -->
+<div class="modal modal-center modal-small modal-xs-full fade" id="donateModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content donate">
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <div class="modal-body">
+        <div class="donate-box">
+          <div class="donate-head">
+            <p>Maybe you could buy me a cup of coffee.</p>
+          </div>
+          <div class="tab-content">
+            <div role="tabpanel" class="tab-pane fade active in" id="alipay">
+              <div class="donate-payimg">
+                <img src="/images/donate/alipayimg.png" alt="Scan Qrcode" title="Scan" />
+              </div>
+              <p class="text-muted mv">Scan this qrcode</p>
+              <p class="text-grey">Open alipay app scan this qrcode, buy me a coffee!</p>
+            </div>
+            <div role="tabpanel" class="tab-pane fade" id="wechatpay">
+              <div class="donate-payimg">
+                <img src="/images/donate/wechatpayimg.png" alt="Scan Qrcode" title="Scan" />
+              </div>
+              <p class="text-muted mv">Scan this qrcode</p>
+              <p class="text-grey">Open wechat app scan this qrcode, buy me a coffee!</p>
+            </div>
+          </div>
+          <div class="donate-footer">
+            <ul class="nav nav-tabs nav-justified" role="tablist">
+              <li role="presentation" class="active">
+                <a href="#alipay" id="alipay-tab" role="tab" data-toggle="tab" aria-controls="alipay" aria-expanded="true"><i class="icon icon-alipay"></i> alipay</a>
+              </li>
+              <li role="presentation" class="">
+                <a href="#wechatpay" role="tab" id="wechatpay-tab" data-toggle="tab" aria-controls="wechatpay" aria-expanded="false"><i class="icon icon-wepay"></i> wechat payment</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+</main>
+
+  <footer class="footer" itemscope itemtype="http://schema.org/WPFooter">
+	
+	
+    <ul class="social-links">
+    	
+        <li><a href="https://github.com/Gsmxs" target="_blank" title="Github" data-toggle=tooltip data-placement=top><i class="icon icon-github"></i></a></li>
+        
+        <li><a href="https://weibo.com/p/1005056044839274/home?from=page_100505&mod=TAB&is_all=1#place" target="_blank" title="Weibo" data-toggle=tooltip data-placement=top><i class="icon icon-weibo"></i></a></li>
+        
+        <li><a href="https://twitter.com/iwebued" target="_blank" title="Twitter" data-toggle=tooltip data-placement=top><i class="icon icon-twitter"></i></a></li>
+        
+        <li><a href="https://www.behance.net/cofess" target="_blank" title="Behance" data-toggle=tooltip data-placement=top><i class="icon icon-behance"></i></a></li>
+        
+        <li><a href="/atom.xml" target="_blank" title="Rss" data-toggle=tooltip data-placement=top><i class="icon icon-rss"></i></a></li>
+        
+    </ul>
+
+    <div class="copyright">
+    	
+        <div class="publishby">
+        	Theme by <a href="https://github.com/cofess" target="_blank"> cofess </a>base on <a href="https://github.com/cofess/hexo-theme-pure" target="_blank">pure</a>.
+        </div>
+    </div>
+</footer>
+  <script src="//cdn.jsdelivr.net/npm/jquery@1.12.4/dist/jquery.min.js"></script>
+<script>
+window.jQuery || document.write('<script src="js/jquery.min.js"><\/script>')
+</script>
+<script src="/js/plugin.min.js"></script>
+<script src="/js/application.js"></script>
+
+    <script>
+(function (window) {
+    var INSIGHT_CONFIG = {
+        TRANSLATION: {
+            POSTS: 'Posts',
+            PAGES: 'Pages',
+            CATEGORIES: 'Categories',
+            TAGS: 'Tags',
+            UNTITLED: '(Untitled)',
+        },
+        ROOT_URL: '/',
+        CONTENT_URL: '/content.json',
+    };
+    window.INSIGHT_CONFIG = INSIGHT_CONFIG;
+})(window);
+</script>
+<script src="/js/insight.js"></script>
+
+
+
+
+
+   
+
+
+
+
+   
+    
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/valine"></script>
+  <script type="text/javascript">
+  var GUEST = ['nick', 'mail', 'link'];
+  var meta = 'nick,mail,link';
+  meta = meta.split(',').filter(function(item) {
+    return GUEST.indexOf(item) > -1;
+  });
+  new Valine({
+    el: '#vcomments',
+    verify: false,
+    notify: false,
+    appId: '',
+    appKey: '',
+    placeholder: 'Just go go',
+    avatar: 'mm',
+    meta: meta,
+    pageSize: '10' || 10,
+    visitor: false
+  });
+  </script>
+
+     
+
+
+
+
+
+
+
+</body>
+</html>
